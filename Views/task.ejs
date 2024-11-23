@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.3.0/jquery.form.min.js"></script>
+</head>
+<body>
+    <h1>Task Management</h1>
+
+    <!-- Task Creation Form -->
+    <h2>Create Task</h2>
+    <form id="taskForm" method="POST">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title" required><br><br>
+
+        <label for="description">Description:</label><br>
+        <input type="text" id="description" name="description" required><br><br>
+
+        <label for="duedate">Due Date:</label><br>
+        <input type="text" id="duedate" name="duedate" placeholder="DD-MM-YYYY"><br><br>
+
+        <button type="submit">Create Task</button>
+    </form>
+
+    <hr>
+
+    <!-- View Tasks -->
+    <h2>All Tasks</h2>
+
+    <% if (tasks && tasks.length === 0) { %>
+        <p>No tasks available.</p>
+    <% } else { %>
+        <table border="1">
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Due Date</th>
+                <th>Actions</th>
+            </tr>
+            <% tasks.forEach(function(task) { %>
+                <tr id="task-<%= task._id %>">
+                    <td><%= task.title %></td>
+                    <td><%= task.description %></td>
+                    <td><%= task.status %></td>
+                    <td><%= task.duedate %></td>
+                    <td>
+                        <!-- Mark as completed -->
+                        <button class="markCompleted" data-task-id="<%= task._id %>">Mark as Completed</button>
+
+                        <!-- Edit Task -->
+                        <button class="editTask" data-task-id="<%= task._id %>" data-title="<%= task.title %>" data-description="<%= task.description %>">Edit</button>
+
+                        <!-- Delete Task -->
+                        <button class="deleteTask" data-task-id="<%= task._id %>">Delete</button>
+                    </td>
+                </tr>
+            <% }); %>
+        </table>
+    <% } %>
+
+    <!-- Edit Task Modal -->
+    <div id="editModal" style="display:none;">
+        <h2>Edit Task</h2>
+        <form id="editForm">
+            <label for="editTitle">Title:</label><br>
+            <input type="text" id="editTitle" name="title" required><br><br>
+
+            <label for="editDescription">Description:</label><br>
+            <input type="text" id="editDescription" name="description" required><br><br>
+
+            <button type="submit">Update Task</button>
+            <button type="button" id="closeModal">Cancel</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // Task Creation
+            $('#taskForm').submit(function(event) {
+                event.preventDefault();
+                const formData = $(this).serialize(); 
+                const userId = localStorage.getItem('userId'); 
+
+                const dataToSend = formData + '&userId=' + userId;
+
+                $.ajax({
+                    url: '/v1/task', 
+                    type: 'POST', 
+                    data: dataToSend, 
+                    success: function(response) {
+                        if (response.message === "Task Created") {
+                            console.log('Task created successfully');
+                            location.reload();  
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error creating task: " + error); 
+                    }
+                });
+            });
+
+            // Mark Task as Completed
+            $(document).on('click', '.markCompleted', function() {
+                const taskId = $(this).data('task-id');
+                $.ajax({
+                    url: '/v1/task/status', 
+                    type: 'PATCH',
+                    data: { taskId, status: 'completed' },
+                    success: function(response) {
+                        if (response.message === 'Task status updated successfully') {
+                            $('#task-' + taskId + ' td:nth-child(3)').text('completed');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error updating task status: " + error);
+                    }
+                });
+            });
+
+            // Delete Task
+            $(document).on('click', '.deleteTask', function() {
+                const taskId = $(this).data('task-id');
+                $.ajax({
+                    url: '/v1/task/' + taskId,
+                    type: 'DELETE',
+                    success: function(response) {
+                        if (response.message === "Task delete successfully") {
+                            $('#task-' + taskId).remove();
+                            location.reload(); 
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error deleting task: " + error);
+                    }
+                });
+            });
+
+            // Edit Task
+            $(document).on('click', '.editTask', function() {
+                const taskId = $(this).data('task-id');
+                const title = $(this).data('title');
+                const description = $(this).data('description');
+
+                // Pre-fill the edit form
+                $('#editTitle').val(title);
+                $('#editDescription').val(description);
+
+                // Show the modal
+                $('#editModal').show();
+
+                // Update Task
+                $('#editForm').submit(function(event) {
+                    event.preventDefault();
+                    const updatedTitle = $('#editTitle').val();
+                    const updatedDescription = $('#editDescription').val();
+
+                    $.ajax({
+                        url: '/v1/task', 
+                        type: 'PATCH', 
+                        data: { taskId, title: updatedTitle, description: updatedDescription }, 
+                        success: function(response) {
+                            if (response.message === 'Task updated successfully') {
+                                $('#task-' + taskId + ' td:nth-child(1)').text(updatedTitle);
+                                $('#task-' + taskId + ' td:nth-child(2)').text(updatedDescription);
+
+                                $('#editModal').hide();
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error("Error updating task: " + error); 
+                        }
+                    });
+                });
+            });
+
+            // Close the modal without making changes
+            $('#closeModal').click(function() {
+                $('#editModal').hide();
+            });
+        });
+    </script>
+</body>
+</html>

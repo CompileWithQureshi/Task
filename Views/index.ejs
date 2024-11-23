@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style.css">
+    <title><%= title %></title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Create User</h1>
+    <form id="createUserForm">
+        <label for="userName">User Name:</label><br>
+        <input type="text" id="userName" name="userName" placeholder="Enter user name" required><br><br>
+    
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email" placeholder="Enter email" required><br><br>
+    
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="responseMessage"></div> 
+
+    <script>
+        $(document).ready(function() {
+    $('#createUserForm').submit(function(event) {
+        event.preventDefault(); 
+
+        const formData = $(this).serialize(); 
+
+        $.ajax({
+            url: '/v1/user', 
+            type: 'POST', 
+            data: formData, 
+            success: function(response) {
+                console.log(response);
+
+                localStorage.setItem('userName', response.user.userName);
+                localStorage.setItem('userId', response.user._id);
+
+                $('#responseMessage').html('<p>User created successfully!</p>');
+                $('#createUserForm')[0].reset(); 
+
+                    window.location.href = '/task';
+            },
+            error: function(xhr, status, error) {
+                $('#responseMessage').html('<p>Error: ' + xhr.responseJSON.message + '</p>');
+            }
+        });
+    });
+});
+    </script>
+    
+</body>
+</html>

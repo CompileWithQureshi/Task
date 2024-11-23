@@ -1,0 +1,24 @@
+Task Management:
+Users should be able to create tasks with a title and description.
+Users should be able to view a list of all tasks.
+Users should be able to mark tasks as completed.
+Users should be able to edit task details.
+Users should be able to delete tasks.
+
+Persistence:
+Implement data persistence simple database like MySQL/MongoDB.
+Tasks should be stored and retrieved from the database.
+
+Validation:
+Implement validation to ensure that task titles are not empty.
+Ensure that users can't mark a task as complete if it's already marked as such.
+Handle errors gracefully and provide meaningful error messages.
+
+Documentation:
+Include clear instructions on how to use your To-Do List application in the README.md file.
+Provide a brief explanation of the code structure and key decisions you made.
+
+Bonus (Optional)
+Implement due dates for tasks.
+Add the ability to categorize tasks.
+Implement unit tests for your application. 
